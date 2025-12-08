@@ -36,10 +36,30 @@ export default function Home() {
   const autoOpen = searchParams.get("open") === "true";
 
   const [open, setOpen] = useState(false);
+  const [price, setPrice] = useState(0); 
 
   useEffect(() => {
     if (autoOpen) setOpen(true);
   }, [autoOpen]);
+
+  // انیمیشن عدد هنگام باز شدن Drawer
+  useEffect(() => {
+    if (!open) return;
+    let start = 0;
+    const end = 825000;
+    const duration = 1000;
+    const startTime = performance.now();
+
+    function animate(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const current = Math.floor(progress * end);
+      setPrice(current);
+
+      if (progress < 1) requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  }, [open]);
 
   return (
     <Root>
@@ -72,6 +92,7 @@ export default function Home() {
           onBackdropClick: (e) => e.stopPropagation(),
         }}
       >
+        {/* بالای Drawer */}
         <StyledBox
           sx={{
             position: "absolute",
@@ -83,38 +104,40 @@ export default function Home() {
           }}
         >
           <Puller />
-          <Typography sx={{ p: 2, color: "black" }}>
+          <Typography component="div" sx={{ p: 2, color: "black" }}>
             <div className="flex items-center justify-center cursor-pointer">
               <span className="text-2xl">ماشین</span>
             </div>
           </Typography>
         </StyledBox>
 
-        <StyledBox sx={{ px: 2, pb: 2, height: "100%",  }}>
+        {/* بدنه Drawer */}
+        <StyledBox sx={{ px: 2, pb: 2, height: "100%" }}>
           <div className="flex flex-col h-full mt-16 ">
+            {/* بخش بالایی */}
             <div>
               <div className="flex justify-between">
                 <span className="text-2xl flex">
-                  <img className="w-10  ml-2.5" src={car} />
+                  <img className="w-10 ml-2.5" src={car} />
                   اسنپ
                 </span>
-                <span className=" text-2xl">۸۲۵,۰۰۰ ریال</span>
+                <span className="text-2xl">
+                  {price.toLocaleString("fa-IR")} ریال
+                </span>
               </div>
             </div>
+
+            {/* بخش پایین Drawer */}
             <div className="mt-auto pb-12">
               <div className="flex justify-between px-7">
-                <div>
-                  <span className="flex flex-col items-center text-2xl cursor-pointer">
-                    <CgDetailsMore />
-                    گزینه های سفر
-                  </span>
-                </div>
-                <div>
-                  <span className="flex flex-col items-center text-2xl cursor-pointer">
-                    <MdOutlineDiscount />
-                     کد تخفیف
-                  </span>
-                </div>
+                <span className="flex flex-col items-center text-2xl cursor-pointer">
+                  <CgDetailsMore />
+                  گزینه‌های سفر
+                </span>
+                <span className="flex flex-col items-center text-2xl cursor-pointer">
+                  <MdOutlineDiscount />
+                  کد تخفیف
+                </span>
               </div>
             </div>
           </div>
