@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import { useSearchParams } from "react-router-dom";
 import { MdOutlineDiscount } from "react-icons/md";
 import { CgDetailsMore } from "react-icons/cg";
+import car from "/img/sport-car.png";
 
 const drawerBleeding = 56;
 
@@ -94,7 +95,7 @@ export default function Home() {
             <div>
               <div className="flex justify-between">
                 <span className="text-2xl flex">
-                  <img className="w-10  ml-2.5" src="/img/sport-car.png" />
+                  <img className="w-10  ml-2.5" src={car} />
                   اسنپ
                 </span>
                 <span className=" text-2xl">۸۲۵,۰۰۰ ریال</span>
