@@ -7,28 +7,27 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { grey } from "@mui/material/colors";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { MdOutlineDiscount } from "react-icons/md";
 import { CgDetailsMore } from "react-icons/cg";
 import car from "/img/sport-car.png";
+import { calculateRandomPrice } from "../PriceCalculator/PriceCalculator";
+import { generateRandomData } from "../../tripGenerator";
+import { StatusBadge } from "../StatusBadge/StatusBadge";
+import { SiAccuweather } from "react-icons/si";
+import { FaTrafficLight, FaClock } from "react-icons/fa";
+import { GiPathDistance } from "react-icons/gi";
 
 const drawerBleeding = 56;
 
 const Root = styled("div")(({ theme }) => ({
   height: "100%",
   backgroundColor: grey[100],
-  ...theme.applyStyles("dark", {
-    backgroundColor: (theme.vars || theme).palette.background.default,
-  }),
 }));
 
 const StyledBox = styled("div")(({ theme }) => ({
   backgroundColor: "#fff",
-  ...theme.applyStyles("dark", {
-    backgroundColor: grey[800],
-  }),
 }));
 
 const Puller = styled("div")(({ theme }) => ({
@@ -39,40 +38,42 @@ const Puller = styled("div")(({ theme }) => ({
   position: "absolute",
   top: 8,
   left: "calc(50% - 15px)",
-  ...theme.applyStyles("dark", {
-    backgroundColor: grey[900],
-  }),
 }));
 
 function SwipeableEdgeDrawer(props) {
   const { window } = props;
+
+  const [trip] = React.useState(() => generateRandomData());
+
   const [open, setOpen] = React.useState(false);
-  const [price, setPrice] = React.useState(0); // ✅ شمارنده عددی
+  const [price, setPrice] = React.useState(0);
+
+  // ✅ دیتا سفر (فقط یک‌بار ساخته می‌شه)
+  const finalPrice = React.useMemo(() => {
+    return calculateRandomPrice();
+  }, []);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
-  // ✅ انیمیشن قیمت هنگام باز شدن Drawer
+  // ✅ انیمیشن قیمت
   React.useEffect(() => {
     if (!open) return;
 
-    const start = 0;
-    const end = 825000; // عدد نهایی
-    const duration = 2000; // به میلی‌ثانیه
+    const duration = 2000;
     const startTime = performance.now();
 
-    const animate = (now) => {
+    function animate(now) {
       const progress = Math.min((now - startTime) / duration, 1);
-      const current = Math.floor(progress * end);
-      setPrice(current);
+      setPrice(Math.floor(progress * finalPrice));
+
       if (progress < 1) requestAnimationFrame(animate);
-    };
+    }
 
     requestAnimationFrame(animate);
-  }, [open]);
+  }, [open, finalPrice]);
 
-  // لازم فقط برای نمایش Drawer
   const container =
     window !== undefined ? () => window().document.body : undefined;
 
@@ -86,10 +87,10 @@ function SwipeableEdgeDrawer(props) {
             overflow: "visible",
             width: "400px",
             margin: "auto",
-            background: "red",
           },
         }}
       />
+
       <Box sx={{ textAlign: "center" }}>
         <Button
           onClick={toggleDrawer(true)}
@@ -98,13 +99,13 @@ function SwipeableEdgeDrawer(props) {
             padding: "10px 30px",
             backgroundColor: "#000",
             color: "white",
-            "&:hover": { backgroundColor: "" },
             boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
           }}
         >
           دریافت سفر
         </Button>
       </Box>
+
       <SwipeableDrawer
         container={container}
         anchor="bottom"
@@ -126,43 +127,58 @@ function SwipeableEdgeDrawer(props) {
           }}
         >
           <Puller />
-          <Typography component="div" sx={{ p: 2, color: "black" }}>
-            <div className="flex items-center justify-center cursor-pointer">
-              <span className="text-2xl">ماشین</span>
-            </div>
+          <Typography sx={{ p: 2 }}>
+            <div className="flex justify-center text-2xl">ماشین</div>
           </Typography>
         </StyledBox>
-
-        {/* بدنه Drawer */}
+        <div className=" px-4 py-2 flex gap-3 overflow-x-auto ">
+          <StatusBadge
+            label="هوا"
+            value={trip.weather}
+            icon={<SiAccuweather />}
+          />
+          <StatusBadge
+            label="ترافیک"
+            value={trip.traffic}
+            icon={<FaTrafficLight />}
+          />
+          <StatusBadge label="ساعت" value={trip.time} icon={<FaClock />} />
+          <StatusBadge
+            label="مسافت"
+            value={`${trip.distance} km`}
+            icon={<GiPathDistance />}
+          />
+        </div>
         <StyledBox sx={{ px: 2, pb: 2, height: "100%" }}>
-          <div className="flex flex-col h-full mt-16 ">
-            <div>
-              <span className="flex justify-center text-2xl">از ایکس به زدباکس</span>
-            </div>
-            {/* بخش بالایی */}
-            <div className="mt-30">
-              <div className="flex justify-between ">
-                <span className="text-2xl flex">
-                  <img className="w-10 ml-2.5" src={car} />
-محاسبه قیمت                   
-                </span>
+          <div className="flex flex-col h-full mt-16">
+            <span className="flex justify-center text-2xl mb-6">
+              از {trip.origin} به {trip.destination}
+            </span>
 
-                {/* ✅ جایگزین عدد ثابت با شمارنده */}
-                <span className="text-2xl">
+            <div className="flex justify-between items-center pt-10">
+              <span className="text-2xl flex items-center">
+                <img className="w-10 ml-2.5" src={car} />
+                محاسبه قیمت
+              </span>
+
+              <div className="text-right">
+                {/* قیمت انیمیشنی */}
+                <div className="text-2xl">
                   {price.toLocaleString("fa-IR").replace(/٬/g, ",")} ریال
-                </span>
+                </div>
               </div>
             </div>
 
-            {/* بخش پایین Drawer */}
-            <div className="mt-auto pb-9">
-              <hr class="h-px bg-gray-300 border-none rounded" />
-              <div className="flex justify-between px-7 mt-2">
-                <span className="flex flex-col items-center text-2xl cursor-pointer mb-5">
+            <div className="mt-auto pb-12">
+              <hr className="h-px bg-gray-300 border-none rounded mb-2" />
+              <div className="flex justify-between px-7">
+                <span className="flex flex-col items-center text-2xl cursor-pointer">
                   <CgDetailsMore />
                   گزینه‌های سفر
                 </span>
-                <div className="w-px h-12 bg-gray-300"></div> {/* خط عمودی */}
+
+                <div className="w-px h-12 bg-gray-300"></div>
+
                 <span className="flex flex-col items-center text-2xl cursor-pointer">
                   <MdOutlineDiscount />
                   کد تخفیف
@@ -175,5 +191,9 @@ function SwipeableEdgeDrawer(props) {
     </Root>
   );
 }
+
+SwipeableEdgeDrawer.propTypes = {
+  window: PropTypes.func,
+};
 
 export default SwipeableEdgeDrawer;

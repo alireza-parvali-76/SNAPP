@@ -33,7 +33,7 @@ export function generateRandomData() {
     destination = getRandomElement(neighborhoods);
   } while (destination === origin);
   
-  const distance = (Math.random() * 20 + 1).toFixed(1);
+  const distance = (Math.random() * 50 + 1).toFixed(1);
   const time = generateRandomTime();
   
   const weatherOptions = ["بارانی", "ابری", "آفتابی", "گرم", "خیلی گرم", "باران زیاد"];
