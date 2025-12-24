@@ -40,24 +40,30 @@ const Puller = styled("div")(({ theme }) => ({
   left: "calc(50% - 15px)",
 }));
 
-function SwipeableEdgeDrawer(props) {
+export default function SwipeableEdgeDrawer(props) {
   const { window } = props;
 
-  const [trip] = React.useState(() => generateRandomData());
-
+  const [trip, setTrip] = React.useState(null);
   const [open, setOpen] = React.useState(false);
   const [price, setPrice] = React.useState(0);
 
-  // ✅ دیتا سفر (فقط یک‌بار ساخته می‌شه)
   const finalPrice = React.useMemo(() => {
-    return calculateRandomPrice();
-  }, []);
+    if (!trip) return 0;
+    return calculateRandomPrice(trip);
+  }, [trip]);
 
   const toggleDrawer = (newOpen) => () => {
+    if (newOpen) {
+      // هر بار که دکمه کلیک می‌شود (برای باز کردن) یک سفر جدید ایجاد کن
+      const newTrip = generateRandomData();
+      setTrip(newTrip);
+    } else {
+      // هنگام بستن Drawer، trip را پاک کن
+      setTrip(null);
+    }
     setOpen(newOpen);
   };
 
-  // ✅ انیمیشن قیمت
   React.useEffect(() => {
     if (!open) return;
 
@@ -67,7 +73,6 @@ function SwipeableEdgeDrawer(props) {
     function animate(now) {
       const progress = Math.min((now - startTime) / duration, 1);
       setPrice(Math.floor(progress * finalPrice));
-
       if (progress < 1) requestAnimationFrame(animate);
     }
 
@@ -80,6 +85,41 @@ function SwipeableEdgeDrawer(props) {
   return (
     <Root>
       <CssBaseline />
+
+      {trip && open && (
+        <div className="fixed top-0 left-0 right-0 z-[1300] pointer-events-none">
+          <div className="mx-auto max-w-md px-4 pt-4">
+            <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+              <div className="text-center text-gray-700 font-semibold mb-3">
+                وضعیت سفر
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <StatusBadge
+                  label="هوا"
+                  value={trip.weather}
+                  icon={<SiAccuweather />}
+                />
+                <StatusBadge
+                  label="ترافیک"
+                  value={trip.traffic}
+                  icon={<FaTrafficLight />}
+                />
+                <StatusBadge
+                  label="ساعت"
+                  value={trip.time}
+                  icon={<FaClock />}
+                />
+                <StatusBadge
+                  label="مسافت"
+                  value={`${trip.distance} km`}
+                  icon={<GiPathDistance />}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Global
         styles={{
           ".MuiDrawer-root > .MuiPaper-root": {
@@ -127,32 +167,17 @@ function SwipeableEdgeDrawer(props) {
           }}
         >
           <Puller />
-          <Typography sx={{ p: 2 }}>
+          <Typography component="div" sx={{ p: 2 }}>
             <div className="flex justify-center text-2xl">ماشین</div>
           </Typography>
         </StyledBox>
-        <div className=" px-4 py-2 flex gap-3 overflow-x-auto ">
-          <StatusBadge
-            label="هوا"
-            value={trip.weather}
-            icon={<SiAccuweather />}
-          />
-          <StatusBadge
-            label="ترافیک"
-            value={trip.traffic}
-            icon={<FaTrafficLight />}
-          />
-          <StatusBadge label="ساعت" value={trip.time} icon={<FaClock />} />
-          <StatusBadge
-            label="مسافت"
-            value={`${trip.distance} km`}
-            icon={<GiPathDistance />}
-          />
-        </div>
+
         <StyledBox sx={{ px: 2, pb: 2, height: "100%" }}>
-          <div className="flex flex-col h-full mt-16">
+          <div className="flex flex-col h-full mt-12">
             <span className="flex justify-center text-2xl mb-6">
-              از {trip.origin} به {trip.destination}
+              {trip
+                ? `از ${trip.origin} به ${trip.destination}`
+                : "در حال تولید سفر..."}
             </span>
 
             <div className="flex justify-between items-center pt-10">
@@ -162,7 +187,6 @@ function SwipeableEdgeDrawer(props) {
               </span>
 
               <div className="text-right">
-                {/* قیمت انیمیشنی */}
                 <div className="text-2xl">
                   {price.toLocaleString("fa-IR").replace(/٬/g, ",")} ریال
                 </div>
@@ -191,9 +215,3 @@ function SwipeableEdgeDrawer(props) {
     </Root>
   );
 }
-
-SwipeableEdgeDrawer.propTypes = {
-  window: PropTypes.func,
-};
-
-export default SwipeableEdgeDrawer;
